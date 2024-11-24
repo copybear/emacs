@@ -57,10 +57,6 @@
       )
     ))
 
-;; pythonのパス
-(setq load-path (cons "~/anaconda3/bin" load-path))
-
-
 ;; Helmから切り替えを検討するため一旦コメントアウトHelmの設定
 ;; (global-set-key (kbd "M-x") 'helm-M-x) (setq helm-M-x-fuzzy-match
 ;; t) ;; optional fuzzy matching for helm-M-x (global-set-key (kbd
@@ -558,6 +554,180 @@
              ("C-p" . company-select-previous)))
 
 ;; treemacsの設定
-(with-eval-after-load 'treemacs
-  (require 'treemacs-all-the-icons)
-  (treemacs-load-theme "all-the-icons"))
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-collapse-dirs                   (if treemacs-python-executable 3 0)
+          treemacs-deferred-git-apply-delay        0.5
+          treemacs-directory-name-transformer      #'identity
+          treemacs-display-in-side-window          t
+          treemacs-eldoc-display                   'simple
+          treemacs-file-event-delay                2000
+          treemacs-file-extension-regex            treemacs-last-period-regex-value
+          treemacs-file-follow-delay               0.2
+          treemacs-file-name-transformer           #'identity
+          treemacs-follow-after-init               t
+          treemacs-expand-after-init               t
+          treemacs-find-workspace-method           'find-for-file-or-pick-first
+          treemacs-git-command-pipe                ""
+          treemacs-goto-tag-strategy               'refetch-index
+          treemacs-header-scroll-indicators        '(nil . "^^^^^^")
+          treemacs-hide-dot-git-directory          t
+          treemacs-indentation                     2
+          treemacs-indentation-string              " "
+          treemacs-is-never-other-window           nil
+          treemacs-max-git-entries                 5000
+          treemacs-missing-project-action          'ask
+          treemacs-move-files-by-mouse-dragging    t
+          treemacs-move-forward-on-expand          nil
+          treemacs-no-png-images                   nil
+          treemacs-no-delete-other-windows         t
+          treemacs-project-follow-cleanup          nil
+          treemacs-persist-file                    (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-position                        'right
+          treemacs-read-string-input               'from-child-frame
+          treemacs-recenter-distance               0.1
+          treemacs-recenter-after-file-follow      nil
+          treemacs-recenter-after-tag-follow       nil
+          treemacs-recenter-after-project-jump     'always
+          treemacs-recenter-after-project-expand   'on-distance
+          treemacs-litter-directories              '("/node_modules" "/.venv" "/.cask")
+          treemacs-project-follow-into-home        nil
+          treemacs-show-cursor                     nil
+          treemacs-show-hidden-files               t
+          treemacs-silent-filewatch                nil
+          treemacs-silent-refresh                  nil
+          treemacs-sorting                         'alphabetic-asc
+          treemacs-select-when-already-in-treemacs 'move-back
+          treemacs-space-between-root-nodes        t
+          treemacs-tag-follow-cleanup              t
+          treemacs-tag-follow-delay                1.5
+          treemacs-text-scale                      nil
+          treemacs-user-mode-line-format           nil
+          treemacs-user-header-line-format         nil
+          treemacs-wide-toggle-width               200
+          treemacs-width                           35
+          treemacs-width-increment                 1
+          treemacs-width-is-initially-locked       nil
+          treemacs-workspace-switch-cleanup        nil)
+
+    ;; The default width and height of the icons is 22 pixels. If you are
+    ;; using a Hi-DPI display, uncomment this to double the icon size.
+    ;;(treemacs-resize-icons 44)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode 'always)
+    (when treemacs-python-executable
+      (treemacs-git-commit-diff-mode t))
+
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple)))
+
+    (treemacs-hide-gitignored-files-mode nil))
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("C-x t t"   . treemacs)
+        ("C-x t d"   . treemacs-select-directory)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
+
+(use-package treemacs-evil
+  :after (treemacs evil)
+  :ensure t)
+
+(use-package treemacs-projectile
+  :after (treemacs projectile)
+  :ensure t)
+
+(use-package treemacs-icons-dired
+  :hook (dired-mode . treemacs-icons-dired-enable-once)
+  :ensure t)
+
+(use-package treemacs-magit
+  :after (treemacs magit)
+  :ensure t)
+
+(use-package treemacs-persp ;;treemacs-perspective if you use perspective.el vs. persp-mode
+  :after (treemacs persp-mode) ;;or perspective vs. persp-mode
+  :ensure t
+  :config (treemacs-set-scope-type 'Perspectives))
+
+(use-package treemacs-tab-bar ;;treemacs-tab-bar if you use tab-bar-mode
+  :after (treemacs)
+  :ensure t
+  :config (treemacs-set-scope-type 'Tabs))
+
+(use-package treemacs-nerd-icons
+  :config
+  (treemacs-load-theme "nerd-icons"))
+
+;;(treemacs-start-on-boot)
+
+
+;; ellamaの設定
+(with-eval-after-load 'llm
+  (require 'llm-ollama)
+  ;; ellama-translateで翻訳する言語
+  (setopt ellama-language "Japanese")
+  ;; ellama-ask-selection などで生成されるファイルのネーミングルール
+  (setopt ellama-naming-scheme 'ellama-generate-name-by-llm)
+  ;; デフォルトのプロバイダー
+  (setopt ellama-provider (make-llm-ollama
+                           :chat-model "codestral:22b-v0.1-q4_K_S"
+                           :embedding-model "codestral:22b-v0.1-q4_K_S"))
+  ;; 翻訳で利用するプロバイダー
+  (setopt ellama-translation-provider (make-llm-ollama
+                                       :chat-model "aya:35b-23-q4_K_S"
+                                       :embedding-model "aya:35b-23-q4_K_S"))
+  ;; ellamaで使えるプロバイダー。ellama-provider-select で選択できる
+  (setopt ellama-providers
+          '(("codestral" . (make-llm-ollama
+                            :chat-model "codestral:22b-v0.1-q4_K_S"
+                            :embedding-model "codestral:22b-v0.1-q4_K_S"))
+            ("gemma2" . (make-llm-ollama
+                            :chat-model "gemma2:27b-instruct-q4_K_S"
+                            :embedding-model "gemma2:27b-instruct-q4_K_S"))
+            ("command-r" . (make-llm-ollama
+                            :chat-model "command-r:35b"
+                            :embedding-model "command-r:35b"))
+            ("llama3.1" . (make-llm-ollama
+                                  :chat-model "llama3.1:8b"
+                                  :embedding-model "llama3.1:8b"))
+            )))
+(setq ellama-define-word-prompt-template "%s の定義を日本語で教えて")
+(setq ellama-summarize-prompt-template "Text:\n%s\n日本語で要約して")
+(setq ellama-code-review-prompt-template "以下のコードのレビューと改善案を日本語でだして:\n```\n%s\n```")
+(setq ellama-change-prompt-template "以下のテキストを「%s」と変更して、引用符なしで日本語で出力して:\n%s")
+(setq ellama-improve-grammar-prompt-template "誤字脱字・文法を日本語で校正して")
+(setq ellama-improve-wording-prompt-template "語句を日本語で推敲して")
+(setq ellama-improve-conciseness-prompt-template "日本語で、できるだけ簡潔にして")
+(setq ellama-code-edit-prompt-template "以下のコードを「%s」と変更して、プロンプト無しでコードだけを\n```language\n...\n```\nの形式で出力して:\n```\n%s\n```\n")
+(setq ellama-code-improve-prompt-template "以下のコードを改善して、プロンプト無しでコードだけを\n```language\n...\n```の形式で出力して:\n```\n%s\n```\n")
+(setq ellama-code-complete-prompt-template "以下のコードの続きを書いて、プロンプト無しでコードだけを\n```language\n...\n```の形式で出力して:\n```\n%s\n```\n")
+(setq ellama-code-add-prompt-template "Context: \n```\n%s\n```\nこのコードを文脈として、%s、プロンプト無しでコードだけを\n```\n...\n```\nの形式で出力して\n")
+(setq ellama-generate-commit-message-template "あなたは熟練プログラマーです。後の変更点をもとに簡潔なコミットメッセージを書いてください。コミットメッセージの形式は、1行目は変更点の要約、2行目は空行、それ以降の行は変更全体の詳細な説明、です。出力はプロンプト無しで最終的なコミットメッセージだけにしてください。\n\n変更点:\n%s\n")
+(setq ellama-make-format-prompt-template "以下のテキストを%sの形式に変換して:\n%s")
+(setq ellama-make-list-prompt-template "Markdownのリスト形式にして")
+(setq ellama-make-table-prompt-template "Markdownのテーブル形式にして")
+
+(require 'mermaid-mode)
+(add-hook 'markdown-mode-hook 'mermaid-mode)
+(setq mermaid-chrome-executable "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome")
+(setenv "PUPPETEER_EXECUTABLE_PATH" "/Applications/Chromium.app/Contents/MacOS/Chromium")
+
+(require 'auto-complete-config)
+(ac-config-default)
+(add-to-list 'ac-sources 'ac-source-xref)

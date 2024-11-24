@@ -72,7 +72,7 @@
 
 ;; 行番号を常に表示する
 ;; 本ではglobal-linum-modeが紹介されていたがver26以降でしたのに変わったらしい
-(global-display-line-numbers-mode t)
+;; (global-display-line-numbers-mode nil)
 
 ;; ファイルが#!から始まる場合、+xをつけて保存する
 (add-hook 'after-save-fook
@@ -124,7 +124,7 @@
 ;; macのパスをEMACSへ連携
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
-
+(setenv "CLASSPATH" "/Library/Java/Extensions/mysql-connector-j-9.0.0.jar:/Library/Java/Extensions/postgresql-42.7.4.jar")
 
 ;; projcetile
 (when (require 'projectile nil t)
